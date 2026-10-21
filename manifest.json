@@ -1,0 +1,9 @@
+{
+  "name": "リビング時計",
+  "short_name": "時計",
+  "start_url": "./index.html",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#000000",
+  "theme_color": "#000000"
+}

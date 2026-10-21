@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#000000">
+<link rel="manifest" href="manifest.json">
+<title>リビング時計</title>
+<style>
+/* 古い Silk でも動くよう、新しい CSS 機能は使わない */
+html, body { margin: 0; height: 100%; background: #000; color: #f2f2f2; overflow: hidden;
+  font-family: "Noto Sans JP", "Hiragino Sans", sans-serif; }
+#wrap { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: -webkit-box; display: -webkit-flex; display: flex; }
+#left, #right { -webkit-box-flex: 1; -webkit-flex: 1; flex: 1; display: -webkit-box; display: -webkit-flex; display: flex;
+  -webkit-flex-direction: column; flex-direction: column; -webkit-justify-content: center; justify-content: center; padding: 3vh 4vw; box-sizing: border-box; }
+#left { -webkit-align-items: center; align-items: center; }
+#time { font-size: 22vw; line-height: 1; font-weight: 200; letter-spacing: -0.02em; }
+#date { font-size: 3.6vw; color: #aaa; margin-top: 2vh; }
+#right { border-left: 1px solid #222; }
+.card { display: none; }
+.card.on { display: block; }
+.big { font-size: 9vw; font-weight: 300; line-height: 1.1; }
+.mid { font-size: 3.4vw; color: #ccc; }
+.small { font-size: 2.2vw; color: #888; }
+.icon { font-size: 8vw; vertical-align: middle; }
+#umbrella { display: none; margin-top: 3vh; padding: 1.5vh 2vw; border-radius: 1vw; background: #12304f; color: #9fd0ff; font-size: 3vw; }
+#hours { display: -webkit-box; display: -webkit-flex; display: flex; margin-top: 2vh; }
+#hours div { -webkit-box-flex: 1; -webkit-flex: 1; flex: 1; text-align: center; font-size: 2vw; color: #bbb; }
+#hours b { display: block; font-size: 4vw; font-weight: 300; color: #eee; }
+#status { position: absolute; left: 1vw; bottom: 1vh; font-size: 1.4vw; color: #444; }
+#gear { position: absolute; right: 1vw; bottom: 0.5vh; font-size: 2.5vw; color: #333; padding: 1vw; }
+/* 夜モード: 時計だけを暗い赤で */
+body.night #right, body.night #date, body.night #status { display: none; }
+body.night #time { color: #5a1414; font-size: 26vw; }
+body.night #gear { color: #1a0505; }
+#settings { display: none; position: absolute; top: 10vh; left: 20vw; right: 20vw; background: #1a1a1a; padding: 3vw; border-radius: 1vw; font-size: 2.4vw; }
+#settings input { font-size: 2.4vw; width: 100%; box-sizing: border-box; margin: 0.5vh 0 1.5vh; padding: 0.6vw; }
+#settings button { font-size: 2.4vw; padding: 0.8vw 1.6vw; margin-right: 1vw; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div id="left"><div id="time">--:--</div><div id="date"></div></div>
+  <div id="right">
+    <div class="card on" id="c-now">
+      <div class="small">いま</div>
+      <div><span class="icon" id="nowIcon"></span> <span class="big" id="nowTemp">--°</span></div>
+      <div class="mid" id="todayRange"></div>
+      <div id="umbrella">☂ 傘を持っていこう</div>
+    </div>
+    <div class="card" id="c-hours">
+      <div class="small">これからの天気(降水確率)</div>
+      <div id="hours"></div>
+    </div>
+    <div class="card" id="c-tomorrow">
+      <div class="small">あした</div>
+      <div><span class="icon" id="tmIcon"></span> <span class="big" id="tmTemp"></span></div>
+      <div class="mid" id="tmRain"></div>
+    </div>
+  </div>
+</div>
+<div id="status"></div>
+<div id="gear">⚙</div>
+<div id="settings">
+  場所(緯度・経度)。この端末の中にだけ保存されます。<br><br>
+  緯度<input id="sLat" inputmode="decimal">
+  経度<input id="sLon" inputmode="decimal">
+  <button id="sGeo">現在地を使う</button><button id="sSave">保存</button><button id="sClose">閉じる</button>
+</div>
+<script src="app.js"></script>
+</body>
+</html>
