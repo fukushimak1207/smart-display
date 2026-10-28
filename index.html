@@ -34,9 +34,10 @@ html, body { margin: 0; height: 100%; background: #000; color: #f2f2f2; overflow
 body.night #right, body.night #date, body.night #status { display: none; }
 body.night #time { color: #5a1414; font-size: 26vw; }
 body.night #gear { color: #1a0505; }
-#settings { display: none; position: absolute; top: 10vh; left: 20vw; right: 20vw; background: #1a1a1a; padding: 3vw; border-radius: 1vw; font-size: 2.4vw; }
+#settings { display: none; position: absolute; top: 4vh; left: 20vw; right: 20vw; background: #1a1a1a; padding: 3vw; border-radius: 1vw; font-size: 2.4vw; }
 #settings input { font-size: 2.4vw; width: 100%; box-sizing: border-box; margin: 0.5vh 0 1.5vh; padding: 0.6vw; }
 #settings button { font-size: 2.4vw; padding: 0.8vw 1.6vw; margin-right: 1vw; }
+#calList .mid, #todoList .mid { margin: 0.8vh 0; }
 </style>
 </head>
 <body>
@@ -58,6 +59,14 @@ body.night #gear { color: #1a0505; }
       <div><span class="icon" id="tmIcon"></span> <span class="big" id="tmTemp"></span></div>
       <div class="mid" id="tmRain"></div>
     </div>
+    <div class="card" id="c-cal" data-empty="1">
+      <div class="small">今日の予定</div>
+      <div id="calList"></div>
+    </div>
+    <div class="card" id="c-todo" data-empty="1">
+      <div class="small">家族の ToDo</div>
+      <div id="todoList"></div>
+    </div>
   </div>
 </div>
 <div id="status"></div>
@@ -66,8 +75,13 @@ body.night #gear { color: #1a0505; }
   場所(緯度・経度)。この端末の中にだけ保存されます。<br><br>
   緯度<input id="sLat" inputmode="decimal">
   経度<input id="sLon" inputmode="decimal">
+  予定・ToDo の URL(Apps Script)<input id="sApi">
+  合言葉<input id="sKey">
   <button id="sGeo">現在地を使う</button><button id="sSave">保存</button><button id="sClose">閉じる</button>
 </div>
-<script src="app.js"></script>
+<script>
+// URL の ?v= を app.js にも付け、古い app.js が使われないようにする
+document.write('<script src="app.js' + (location.search || '') + '"><\/script>');
+</script>
 </body>
 </html>

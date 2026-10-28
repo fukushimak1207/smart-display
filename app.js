@@ -4,6 +4,8 @@
   var UMBRELLA_PCT = 50;                 // この降水確率以上で傘表示
   var CARD_SEC = 20;                     // 右側の切り替え間隔
   var WEATHER_MIN = 30;                  // 天気の更新間隔
+  var DATA_MIN = 10;                     // 予定・ToDo の更新間隔
+  var VERSION = '3';                     // version.txt と同じ値にして push する
   var WD = ['日', '月', '火', '水', '木', '金', '土'];
 
   function $(id) { return document.getElementById(id); }
@@ -38,11 +40,69 @@
     $('wrap').style.top = ((Math.floor(m / 5) % 5) - 2) + 'px';
   }
 
-  var cards = ['c-now', 'c-hours', 'c-tomorrow'], ci = 0;
+  var cards = ['c-now', 'c-hours', 'c-tomorrow', 'c-cal', 'c-todo'], ci = 0;
   function rotate() {
     $(cards[ci]).className = 'card';
-    ci = (ci + 1) % cards.length;
+    // 中身の無いカード(未設定の予定・ToDo)は飛ばす
+    for (var k = 0; k < cards.length; k++) {
+      ci = (ci + 1) % cards.length;
+      if ($(cards[ci]).getAttribute('data-empty') !== '1') break;
+    }
     $(cards[ci]).className = 'card on';
+  }
+
+  function get(url, ok, ng) {
+    var x = new XMLHttpRequest();
+    x.open('GET', url);
+    x.timeout = 20000;
+    x.onload = function () { if (x.status === 200) ok(x.responseText); else ng(); };
+    x.onerror = x.ontimeout = ng;
+    x.send();
+  }
+
+  // 新しい版が公開されたら、URL を変えて読み直す(Silk に古い版が残る対策)
+  function checkVersion() {
+    get('version.txt?t=' + new Date().getTime(), function (t) {
+      t = t.replace(/\s/g, '');
+      if (t && t !== VERSION) location.replace(location.pathname + '?v=' + t);
+    }, function () {});
+  }
+
+  // 予定と ToDo: Apps Script が件名を消した予定と、共有シートの ToDo を返す
+  function getData() {
+    var api = load('api'), key = load('key');
+    if (!api || !key) {
+      $('c-cal').setAttribute('data-empty', '1'); $('c-todo').setAttribute('data-empty', '1');
+      return;
+    }
+    get(api + '?key=' + encodeURIComponent(key), function (t) {
+      try { renderData(JSON.parse(t)); } catch (e) { $('status').innerHTML = '予定の読み取りに失敗'; }
+    }, function () { $('status').innerHTML = '予定を取得できません'; });
+  }
+
+  function renderData(j) {
+    if (j.error) { $('status').innerHTML = '予定: ' + (j.error === 'key' ? '合言葉が違います' : 'エラー'); return; }
+    var box = $('calList'), i, row;
+    box.innerHTML = '';
+    if (!j.events.length) { box.innerHTML = '<div class="mid">今日の予定はありません</div>'; }
+    for (i = 0; i < j.events.length; i++) {
+      row = document.createElement('div'); row.className = 'mid';
+      row.textContent = j.events[i].allDay ? '終日 予定あり' : j.events[i].start + '〜' + j.events[i].end + ' 予定あり';
+      box.appendChild(row);
+    }
+    $('c-cal').setAttribute('data-empty', '0');
+
+    box = $('todoList'); box.innerHTML = '';
+    for (i = 0; i < j.todos.length && i < 8; i++) {
+      row = document.createElement('div'); row.className = 'mid';
+      row.textContent = '□ ' + j.todos[i].task + (j.todos[i].who ? '(' + j.todos[i].who + ')' : '');
+      box.appendChild(row);
+    }
+    if (j.todos.length > 8) {
+      row = document.createElement('div'); row.className = 'small';
+      row.textContent = 'ほか ' + (j.todos.length - 8) + ' 件'; box.appendChild(row);
+    }
+    $('c-todo').setAttribute('data-empty', j.todos.length ? '0' : '1');
   }
 
   function getWeather() {
@@ -98,6 +158,7 @@
   // 設定画面
   $('gear').onclick = function () {
     $('sLat').value = load('lat') || ''; $('sLon').value = load('lon') || '';
+    $('sApi').value = load('api') || ''; $('sKey').value = load('key') || '';
     $('settings').style.display = 'block';
   };
   $('sClose').onclick = function () { $('settings').style.display = 'none'; };
@@ -106,7 +167,8 @@
     if (isNaN(la) || isNaN(lo)) { alert('数字で入力してください'); return; }
     // 細かすぎる位置は不要なので小数2桁(約1km)に丸める
     save('lat', la.toFixed(2)); save('lon', lo.toFixed(2));
-    $('settings').style.display = 'none'; getWeather();
+    save('api', $('sApi').value.replace(/\s/g, '')); save('key', $('sKey').value.replace(/\s/g, ''));
+    $('settings').style.display = 'none'; getWeather(); getData();
   };
   $('sGeo').onclick = function () {
     if (!navigator.geolocation) { alert('この端末では現在地が使えません'); return; }
@@ -125,6 +187,8 @@
   tick(); setInterval(tick, 10000);
   setInterval(rotate, CARD_SEC * 1000);
   getWeather(); setInterval(getWeather, WEATHER_MIN * 60000);
+  getData(); setInterval(getData, DATA_MIN * 60000);
+  setInterval(checkVersion, 15 * 60000);
   // 長時間開きっぱなしでの不調に備え、毎日3時に再読み込み
   setInterval(function () { var d = new Date(); if (d.getHours() === 3 && d.getMinutes() === 0) location.reload(); }, 60000);
 })();
