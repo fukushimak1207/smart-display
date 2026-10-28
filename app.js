@@ -115,6 +115,13 @@
     }, function () { alert('現在地を取得できませんでした'); });
   };
 
+  // 時計をタップで全画面(ブラウザの決まりでタップなしには切り替えられない)
+  $('left').onclick = function () {
+    var el = document.documentElement;
+    var fn = el.requestFullscreen || el.webkitRequestFullscreen;
+    if (fn) fn.call(el);
+  };
+
   tick(); setInterval(tick, 10000);
   setInterval(rotate, CARD_SEC * 1000);
   getWeather(); setInterval(getWeather, WEATHER_MIN * 60000);
