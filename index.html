@@ -81,7 +81,13 @@ body.night #gear { color: #1a0505; }
 </div>
 <script>
 // URL の ?v= を app.js にも付け、古い app.js が使われないようにする
-document.write('<script src="app.js' + (location.search || '') + '"><\/script>');
+// URL の文字列をそのまま埋め込まず、英数字の版番号だけを取り出して使う
+(function () {
+  var v = (location.search.match(/[?&]v=([0-9A-Za-z._-]+)/) || [])[1];
+  var s = document.createElement('script');
+  s.src = 'app.js' + (v ? '?v=' + encodeURIComponent(v) : '');
+  document.body.appendChild(s);
+})();
 </script>
 </body>
 </html>
